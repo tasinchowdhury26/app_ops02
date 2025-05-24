@@ -1,0 +1,37 @@
+name: Daily OSV Scanner
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC
+  workflow_dispatch:     # Allows manual triggering
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download and install osv-scanner
+        run: |
+          sudo wget -qO /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
+          sudo chmod +x /usr/local/bin/osv-scanner
+
+      - name: Run OSV Scanner
+        run: |
+          osv-scanner scan source --r --format html . > output.html
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: osv-scan-results
+          path: output.html
+
+      - name: Commit and push results (optional)
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add output.html
+          git commit -m "Update OSV scan results - $(date)"
+          git push
