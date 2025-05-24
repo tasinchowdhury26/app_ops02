@@ -1,29 +1,27 @@
-name: OSV Scanner
+name: OSV-Scanner Nightly Scan
 on:
-  push:
-    branches: ["main"] # Runs on push to 'main'
   schedule:
-    - cron: "0 0 * * *" # Runs daily at midnight (optional)
-  workflow_dispatch: # Allows manual trigger
+    - cron: '0 2 * * *'  # Runs at 2 AM UTC daily
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # GitHub's Linux runner
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install OSV-Scanner
         run: |
-          curl -L https://github.com/google/osv-scanner/releases/latest/download/osv-scanner-linux-amd64 -o osv-scanner
+          curl -L https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64 -o osv-scanner
           chmod +x osv-scanner
           sudo mv osv-scanner /usr/local/bin/
 
-      - name: Run OSV Scan & Save Report
+      - name: Run OSV-Scanner and save report
         run: |
           osv-scanner scan source --r --format html . > output.html
 
-      - name: Upload Report as Artifact
+      - name: Upload report as an artifact (optional)
         uses: actions/upload-artifact@v3
         with:
           name: osv-scan-report
